@@ -9,11 +9,13 @@ import { EmptyState } from '../components/EmptyState.jsx';
 import { ExperienceCard } from '../components/ExperienceCard.jsx';
 import { FilterSidebar } from '../components/FilterSidebar.jsx';
 import { HiddenGemCard } from '../components/HiddenGemCard.jsx';
+import { InteractiveMap } from '../components/InteractiveMap.jsx';
 import { RecommendationCard } from '../components/RecommendationCard.jsx';
 import { SectionHeading } from '../components/SectionHeading.jsx';
 import { StayCard } from '../components/StayCard.jsx';
 import { recommendedTrips } from '../data/recommendations.js';
 import { useDiscoverFilters } from '../hooks/useDiscoverFilters.js';
+import { useMapFilters } from '../hooks/useMapFilters.js';
 
 function Grid({ children }) {
   return <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{children}</div>;
@@ -22,6 +24,7 @@ function Grid({ children }) {
 export default function DiscoverPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const { activeTab, filters, query, resetFilters, setActiveTab, setQuery, updateFilter, visibleItems } = useDiscoverFilters();
+  const { filteredLocations, highlightedLocation } = useMapFilters({ activeTab, filters, query });
 
   const groupedItems = useMemo(
     () => ({
@@ -66,6 +69,8 @@ export default function DiscoverPage() {
 
         <div className="min-w-0 space-y-8">
           <CategoryTabs activeTab={activeTab} onChange={setActiveTab} />
+
+          <InteractiveMap highlightedLocation={highlightedLocation} locations={filteredLocations} />
 
           {!hasResults && <EmptyState onReset={resetFilters} />}
 
