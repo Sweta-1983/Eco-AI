@@ -1,1 +1,2 @@
-export const discoverModules = ['Smart Travel Map', 'AI Recommendations', 'Stays', 'Experiences', 'Hidden Gems'];
+export { default as DiscoverPage } from './pages/DiscoverPage.jsx';
+export { useDiscoverFilters } from './hooks/useDiscoverFilters.js';
