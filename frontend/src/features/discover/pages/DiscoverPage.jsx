@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { SlidersHorizontal } from 'lucide-react';
 import { PageContainer } from '../../../components/layout';
+import { ErrorMessage, Loader } from '../../../components/ui';
 import { CategoryTabs } from '../components/CategoryTabs.jsx';
 import { DestinationCard } from '../components/DestinationCard.jsx';
 import { DiscoverHero } from '../components/DiscoverHero.jsx';
@@ -23,7 +24,7 @@ function Grid({ children }) {
 
 export default function DiscoverPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const { activeTab, filters, query, resetFilters, setActiveTab, setQuery, updateFilter, visibleItems } = useDiscoverFilters();
+  const { activeTab, filters, isLoadingStays, query, resetFilters, setActiveTab, setQuery, staysError, updateFilter, visibleItems } = useDiscoverFilters();
   const { filteredLocations, highlightedLocation } = useMapFilters({ activeTab, filters, query });
 
   const groupedItems = useMemo(
@@ -71,6 +72,10 @@ export default function DiscoverPage() {
           <CategoryTabs activeTab={activeTab} onChange={setActiveTab} />
 
           <InteractiveMap highlightedLocation={highlightedLocation} locations={filteredLocations} />
+
+          {isLoadingStays && <Loader className="min-h-40 rounded-lg border border-dashed border-slate-200 dark:border-slate-800" label="Loading verified stays" />}
+
+          {staysError && <ErrorMessage message={staysError} />}
 
           {!hasResults && <EmptyState onReset={resetFilters} />}
 

@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
+import { apiClient, getApiErrorMessage } from '../../../services';
 import { destinations } from '../data/destinations.js';
 import { experiences } from '../data/experiences.js';
 import { hiddenGems } from '../data/hiddenGems.js';
-import { stays } from '../data/stays.js';
 
 const initialFilters = {
   budget: 20000,
@@ -14,20 +15,71 @@ const initialFilters = {
   category: 'All',
 };
 
-const collectionMap = {
-  All: [...destinations, ...stays, ...experiences, ...hiddenGems],
-  Stays: stays,
-  Experiences: experiences,
-  'Hidden Gems': hiddenGems,
-};
-
 const getItemBudget = (item) => item.budget || item.price || 0;
 const getItemType = (item) => item.travelType || item.type;
+
+const normalizeStay = (stay) => ({
+  ...stay,
+  name: stay.title,
+  destination: stay.location,
+  price: stay.pricePerNight,
+  communityScore: stay.communityImpactScore,
+  type: stay.category,
+  category: 'Stays',
+});
 
 export function useDiscoverFilters() {
   const [activeTab, setActiveTab] = useState('All');
   const [filters, setFilters] = useState(initialFilters);
+  const [isLoadingStays, setIsLoadingStays] = useState(true);
   const [query, setQuery] = useState('');
+  const [stays, setStays] = useState([]);
+  const [staysError, setStaysError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchStays() {
+      try {
+        setIsLoadingStays(true);
+        setStaysError('');
+        const response = await apiClient.get('/stays');
+        const apiStays = Array.isArray(response.data?.data) ? response.data.data.map(normalizeStay) : [];
+
+        if (isMounted) {
+          setStays(apiStays);
+        }
+      } catch (error) {
+        const message = getApiErrorMessage(error);
+
+        if (isMounted) {
+          setStays([]);
+          setStaysError(message);
+          toast.error(message);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingStays(false);
+        }
+      }
+    }
+
+    fetchStays();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const collectionMap = useMemo(
+    () => ({
+      All: [...destinations, ...stays, ...experiences, ...hiddenGems],
+      Stays: stays,
+      Experiences: experiences,
+      'Hidden Gems': hiddenGems,
+    }),
+    [stays],
+  );
 
   const updateFilter = (key, value) => {
     setFilters((current) => ({ ...current, [key]: value }));
@@ -67,11 +119,13 @@ export function useDiscoverFilters() {
     experiences,
     filters,
     hiddenGems,
+    isLoadingStays,
     query,
     resetFilters,
     setActiveTab,
     setQuery,
     stays,
+    staysError,
     updateFilter,
     visibleItems,
   };
